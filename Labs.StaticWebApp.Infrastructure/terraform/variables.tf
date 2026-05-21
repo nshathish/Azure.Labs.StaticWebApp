@@ -26,3 +26,9 @@ variable "sku_tier" {
     error_message = "sku_tier must be 'Free' or 'Standard'."
   }
 }
+
+variable "allowed_cors_origins" {
+  description = "Comma-separated list of origins allowed to make cross-origin requests (AllowedCorsOrigins app setting)."
+  type        = string
+  default     = ""
+}

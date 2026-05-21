@@ -7,6 +7,10 @@ resource "azurerm_static_web_app" "this" {
   # Pull-request preview environments require Standard SKU
   preview_environments_enabled = var.preview_environments_enabled
 
+  app_settings = {
+    "AllowedCorsOrigins" = var.allowed_cors_origins
+  }
+
   tags = var.tags
 
   # azurerm 4.x has a known bug where it tries to GET app_settings during plan

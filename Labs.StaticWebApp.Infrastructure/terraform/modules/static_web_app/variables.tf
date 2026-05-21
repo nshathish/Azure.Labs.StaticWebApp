@@ -30,3 +30,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "allowed_cors_origins" {
+  description = "Comma-separated list of origins allowed to make cross-origin requests (AllowedCorsOrigins app setting)."
+  type        = string
+  default     = ""
+}

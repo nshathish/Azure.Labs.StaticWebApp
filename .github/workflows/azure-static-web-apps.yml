@@ -24,12 +24,13 @@ jobs:
         run: dotnet publish Labs.StaticWebApp.Api/Labs.StaticWebApp.Api.csproj -c Release -o .publish/api
 
       - uses: azure/static-web-apps-deploy@v1
+        env:
+          API_LANGUAGE: dotnetisolated
+          API_LANGUAGE_VERSION: "8"
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: upload
           app_location: .publish/client/wwwroot
           api_location: .publish/api
-          api_language: dotnetisolated
-          api_language_version: "10"
           skip_app_build: true
           skip_api_build: true
