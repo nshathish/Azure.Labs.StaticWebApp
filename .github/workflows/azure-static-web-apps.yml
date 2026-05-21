@@ -18,7 +18,7 @@ jobs:
             10.x
 
       - name: Publish client
-        run: dotnet publish Labs.StaticWebApp.Client/Labs.StaticWebApp.Client.csproj -c Release -o .publish/client
+        run: dotnet publish Labs.StaticWebApp.Client.Wasm/Labs.StaticWebApp.Client.Wasm.csproj -c Release -o .publish/client
 
       - name: Publish API
         run: dotnet publish Labs.StaticWebApp.Api/Labs.StaticWebApp.Api.csproj -c Release -o .publish/api

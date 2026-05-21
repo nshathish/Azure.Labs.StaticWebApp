@@ -1,12 +1,17 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Labs.StaticWebApp.Api;
 
-public class GetWeather(ILogger<GetWeather> logger)
+public class GetWeather(ILogger<GetWeather> logger, IConfiguration configuration)
 {
+    private readonly HashSet<string> _allowedCorsOrigins = (configuration["AllowedCorsOrigins"] ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     private static IEnumerable<WeatherForecast> GetForecasts(int daysToForecast)
     {
         return Enumerable.Range(1, daysToForecast).Select(index =>
@@ -41,6 +46,17 @@ public class GetWeather(ILogger<GetWeather> logger)
         int daysToForecast)
     {
         logger.LogInformation("C# HTTP trigger function processed a request.");
+
+        if (req.Headers.TryGetValue("Origin", out var originValues))
+        {
+            var origin = originValues.ToString();
+            if (_allowedCorsOrigins.Contains(origin))
+            {
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", origin);
+                req.HttpContext.Response.Headers.Append("Vary", "Origin");
+            }
+        }
+
         return new OkObjectResult(GetForecasts(daysToForecast));
     }
 
