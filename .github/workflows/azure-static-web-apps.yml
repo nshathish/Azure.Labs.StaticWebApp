@@ -29,5 +29,7 @@ jobs:
           action: upload
           app_location: .publish/client/wwwroot
           api_location: .publish/api
+          api_language: dotnetisolated
+          api_language_version: "10"
           skip_app_build: true
           skip_api_build: true
