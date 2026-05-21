@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Labs.StaticWebApp.Api/Labs.StaticWebApp.Api.csproj" />
+  <Project Path="Labs.StaticWebApp.Client/Labs.StaticWebApp.Client.csproj" />
+</Solution>

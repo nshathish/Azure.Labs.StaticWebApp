@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Claude Code
+.claude/
+
+# Build outputs
+.publish/
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+
+# Azure Functions local config (may contain connection strings)
+**/local.settings.json
+
+# Terraform providers and state
+**/.terraform/
+*.tfstate
+*.tfstate.backup
