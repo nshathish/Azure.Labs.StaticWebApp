@@ -1,0 +1,153 @@
+@page "/todos"
+@inject HttpClient Http
+
+<PageTitle>Todos</PageTitle>
+
+<h1>Todo List</h1>
+
+<div class="input-group mb-4">
+    <input class="form-control"
+           placeholder="New todo..."
+           @bind="_newTitle"
+           @onkeydown="OnNewTitleKeyDown" />
+    <button class="btn btn-primary"
+            @onclick="AddTodo"
+            disabled="@string.IsNullOrWhiteSpace(_newTitle)">
+        Add
+    </button>
+</div>
+
+@if (_todos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (_todos.Count == 0)
+{
+    <p class="text-muted">No todos yet. Add one above!</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var todo in _todos)
+        {
+            <li class="list-group-item d-flex align-items-center gap-2">
+                <input type="checkbox"
+                       class="form-check-input flex-shrink-0"
+                       checked="@todo.IsCompleted"
+                       @onchange="() => ToggleComplete(todo)" />
+
+                @if (_editingId == todo.Id)
+                {
+                    <input class="form-control form-control-sm"
+                           @bind="_editTitle"
+                           @onkeydown="e => OnEditKeyDown(e, todo)" />
+                    <button class="btn btn-sm btn-success"
+                            @onclick="() => SaveEdit(todo)"
+                            disabled="@string.IsNullOrWhiteSpace(_editTitle)">
+                        Save
+                    </button>
+                    <button class="btn btn-sm btn-secondary" @onclick="CancelEdit">
+                        Cancel
+                    </button>
+                }
+                else
+                {
+                    <span class="flex-grow-1 @(todo.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                        @todo.Title
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEdit(todo)">
+                        Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTodo(todo)">
+                        Delete
+                    </button>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<TodoItem>? _todos;
+    private string _newTitle = "";
+    private int? _editingId;
+    private string _editTitle = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _todos = await Http.GetFromJsonAsync<List<TodoItem>>("/api/todos");
+    }
+
+    private async Task AddTodo()
+    {
+        if (string.IsNullOrWhiteSpace(_newTitle)) return;
+
+        var response = await Http.PostAsJsonAsync("/api/todos", new { Title = _newTitle });
+        if (response.IsSuccessStatusCode)
+        {
+            var created = await response.Content.ReadFromJsonAsync<TodoItem>();
+            if (created is not null)
+                _todos?.Add(created);
+            _newTitle = "";
+        }
+    }
+
+    private async Task ToggleComplete(TodoItem todo)
+    {
+        todo.IsCompleted = !todo.IsCompleted;
+        var response = await Http.PutAsJsonAsync($"/api/todos/{todo.Id}",
+            new { todo.Title, todo.IsCompleted });
+        if (!response.IsSuccessStatusCode)
+            todo.IsCompleted = !todo.IsCompleted; // revert on failure
+    }
+
+    private void StartEdit(TodoItem todo)
+    {
+        _editingId = todo.Id;
+        _editTitle = todo.Title;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _editTitle = "";
+    }
+
+    private async Task SaveEdit(TodoItem todo)
+    {
+        if (string.IsNullOrWhiteSpace(_editTitle)) return;
+
+        var response = await Http.PutAsJsonAsync($"/api/todos/{todo.Id}",
+            new { Title = _editTitle, todo.IsCompleted });
+        if (response.IsSuccessStatusCode)
+        {
+            todo.Title = _editTitle;
+            CancelEdit();
+        }
+    }
+
+    private async Task DeleteTodo(TodoItem todo)
+    {
+        var response = await Http.DeleteAsync($"/api/todos/{todo.Id}");
+        if (response.IsSuccessStatusCode)
+            _todos?.Remove(todo);
+    }
+
+    private async Task OnNewTitleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await AddTodo();
+    }
+
+    private async Task OnEditKeyDown(KeyboardEventArgs e, TodoItem todo)
+    {
+        if (e.Key == "Enter") await SaveEdit(todo);
+        else if (e.Key == "Escape") CancelEdit();
+    }
+
+    private class TodoItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public bool IsCompleted { get; set; }
+    }
+}
